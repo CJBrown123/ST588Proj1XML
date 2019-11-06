@@ -23,7 +23,6 @@ library(DT)
 library(forcats)
 library(pastecs)
 library(ggplot2)
-
 ```
   
 # XML Data: An Overview  
