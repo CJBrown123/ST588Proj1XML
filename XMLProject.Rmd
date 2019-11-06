@@ -1,0 +1,213 @@
+---
+title: "CJ Brown - Project 1 Part 1 - XML Data"
+author: "Chinyere Brown"
+date: "10/18/2019"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+---
+  
+```{r setup1, include=FALSE}
+#install.packages("XML")
+#install.packages("flatxml")
+
+library(tidyverse)
+#includes ggplot2, tibble, tidyr, readr, purrr, dplyr, stringr, and forcats
+library(plyr)
+library(XML)
+library(methods)
+library(knitr)
+library(DT)
+library(forcats)
+library(pastecs)
+library(ggplot2)
+
+```
+  
+# XML Data: An Overview  
+  
+The Extensible Markup Language (XML) is a simple text-based format for representing structured information and is a formal recommendation from the World Wide Web Consortium (W3C) [ ^1^ ](https://www.w3.org/standards/xml/core). Because XML are stored as text, these files can be opened with a number of different programs. 
+Although XML is based on GML Standard Generalized Markup Language (the mother of all markup languagesb) is was specifically designed to be more suitable for Web use [ ^2^ ](https://www.makeuseof.com/tag/xml-file-case-wondering/). XML is *extensible* because users can add and define new building blocks (tags) and by doing so can readily adapt XML to their needs [ ^1^ ](https://whatis.techtarget.com/definition/XML-Extensible-Markup-Language).   
+  
+  
+## What is XML?  
+  
+XML is a meta markup language that was specifically developed for the internet; it's purpose is to describe and structure data on the internet,  mobile apps, and other web-connected interfaces [ ^2^ ](https://www.makeuseof.com/tag/xml-file-case-wondering/). 
+XML is  similar to HTML in that they are both markup languages that use tags to annotate text or add additional information in ways that are read and processed by your machine (i.e., web browser) but are invisible to the end-user. However, when compared to HTML, XML is more flexible because it allows users to add their own self-describing tags; rather than define how data looks (like HTML does), XML merely defines what data *is* [ ^2^ ](https://www.makeuseof.com/tag/xml-file-case-wondering/). HTML rarely (if ever) provides information about how the document is structured or what it means. In layman’s terms, Where HTML is a presentation language,  XML is a data-description language [ ^3^ ](https://www.sitepoint.com/really-good-introduction-xml/). XML data is known as self-describing or self-defining, meaning that the structure of the data is embedded with the data--so when you are using an XML file you don't have to pre-build file structures for storing the data because it is going to be understood from within the XML file itself [ ^1^ ](https://whatis.techtarget.com/definition/XML-Extensible-Markup-Language).  
+  
+## Where/How can XML data be used?  
+  
+The XML format can be used for representing structured information: documents, data, configuration, books, transactions, invoices, and much more; it is one of the most widely-used formats for sharing structured information today: between programs, between people, between computers and people, both locally and across networks. [ ^4^ ](https://www.w3.org/standards/xml/core) XML is most commonly used for the interchange of data over the Internet and has found a wide variety of applications. Many different types of programs and devices use XML to handle, structure, store, transmit, and display data. XML is used in business-to-business data interfaces and is the standard for Office file formats, including Microsoft Office and Google Docs files [ ^2^ ](https://www.makeuseof.com/tag/xml-file-case-wondering/) [ ^1^ ](https://whatis.techtarget.com/definition/XML-Extensible-Markup-Language). 
+  
+  
+## Why is it good to store data as XML? 
+  
+XML is good to use We need it because it allows anyone to quickly create Web documents that can be shared with other people (as opposed to HTML, which is specifically designed to describe documents for display in a Web browser, becomes cumbersome if you want to display documents on mobile device or do more complex tasks). XML is not only suited for the web--it can be used in many more contexts, such as sending web services requests and responses back and forth [ ^3^ ](https://www.sitepoint.com/really-good-introduction-xml/).  
+  
+Other benefits of XML include:  
+  
+* **Redundancy** - the requirement to use paired tags (tags with a `start` and `stop` annotation) allows the computer catch common errors like incorrect nesting [ ^4^ ](https://www.w3.org/standards/xml/core).  
+  
+* **Self-describing** - the text-based format and presence of element and attribute names helps in understanding the format and finding mistakes) [ ^4^ ](https://www.w3.org/standards/xml/core).  
+  
+* **Portability**  - Any XML document can be read and processed by any XML tool; the XML format can be read by any XML parser (no specific tool required!) [ ^4^ ](https://www.w3.org/standards/xml/core).  
+  
+* **Wide Adoption** - XML is very widely used today and  is the basis of  many standards such as the Universal Business Language (UBL); of Universal Plug and Play (UPnP) used for home electronics; word processing formats such as ODF; graphics formats such as SVG; and for communication with XMLRPC and Web Services. XML is supported directly by computer programming languages and databases, from giant servers to mobile devices [ ^4^ ](https://www.w3.org/standards/xml/core).  
+  
+# Packages for reading XML data  
+  
+When I started looking into R packages that could be used to read in XML data, I found 3 options: `XML`, `xml2`, and `flatxml`. `XML` appeared to be the oldest package of the three and was designed to do basic functions of reading and creating XML type data [ ^5^ ](https://cran.r-project.org/web/packages/XML/index.html) . The `xml2` package is similar to `XML`, but is a binding to `libxml2` which makes it easier to work with HTML and XML files in R [ ^6^ ](https://mran.microsoft.com/snapshot/2018-02-25/web/packages/xml2/index.html) . The `flatxml` diffes from both `XML` and `xml2` in that it converts the XML file to a dataframe (reflective of the heirarchical structure) upon import [ ^7^ ](https://cran.r-project.org/web/packages/flatxml/index.html).  
+  
+For my analysis I actually tried all three packages to test out which one would be most efficient in importing my XML data. I assumed that one of the newer packages would work more effectively and I know that xml2 offers added benefits of being actively maintained and provind some memory management when working with files, but I was unable to get the results I wanted in a clear, concise way. I ended up using `XML` because, although it is not the most current package, I was able to succesdully read in my data (with the help of a `for()` loop). I converted the table to a tibble once I read it in.  
+  
+
+```{r setup2, echo=TRUE, eval=TRUE}
+
+#Read in the raw XML file
+xmlParse <- xmlParse("HateCrimesNY.xml")
+
+# I Manually Created a list containing all variable names from the XML file. I wil need this list to rename columns later.
+hateNames <- c("county", "year", "crime_type", "anti_male", "anti_female", "anti_transgender", "anti_gender_identity_expression", "anti_age", "anti_white", "anti_black", "anti_american_indian_alaskan_native", "anti_asian", "anti_native_hawaiian_pacific_islander", "anti_multi_racial_groups", "anti_other_race", "anti_jewish", "anti_catholic", "anti_protestant", "anti_islamic_muslim", "anti_multi_religious_groups", "anti_atheism_agnosticism", "anti_religious_practice_generally", "anti_other_religion", "anti_buddhist", "anti_eastern_orthodox_greek_russian_etc", "anti_hindu", "anti_jehovahs_witness", "anti_mormon", "anti_other_christian", "anti_sikh", "anti_hispanic", "anti_arab", "anti_other_ethnicity_national_origin", "anti_non_hispanic", "anti_gay_male", "anti_gay_female", "anti_gay_male_and_female", "anti_heterosexual", "anti_bisexual", "anti_physical_disability", "anti_mental_disability", "total_incidents", "total_victims", "total_offenders")
+
+# I created a data frame container for housing the data I planned to bring in. I created a couple of variables to make it easier to find/update my parameters later (if needed).
+n <- 423
+v <- length(hateNames)
+HateCrimes <- data.frame(matrix(nrow = n, ncol = v))
+
+for(i in 1:length(hateNames)) {
+  hateVar <-  hateNames[i]
+  colParse <- paste0("//response/row/row/", hateVar)
+ name <- setNames(xmlToDataFrame(node = getNodeSet(xmlParse, colParse)), hateVar)
+  HateCrimes[, i] <- name
+}
+
+names(HateCrimes) <- hateNames
+
+HateCrimes <- as_tibble(HateCrimes)
+```
+  
+Once I read the data in, I realized that all of my variables where of "character" type, so I changed them to numeric as appropriate and created two new variables showing the ratio of victims to incidents/offenders to allow for further insights into the crime data.
+  
+  
+```{r setup3, eval=TRUE, echo=TRUE}
+HateCrimes[, 4:44] <- lapply(HateCrimes[,4:44], as.character)
+
+HateCrimes[, 4:44] <- lapply(HateCrimes[,4:44], as.numeric)
+
+HateCrimes <- mutate(HateCrimes, victims_per_offender = total_victims/total_offenders)
+
+HateCrimes <- mutate(HateCrimes, victims_per_incident = total_victims/total_incidents)
+```
+  
+  
+# About My Data - New York Hate Crimes
+  
+For my analysis, I obtained searched <data.gov> for XML data files and selected one that I thought was interesting and met the project specifications of having at least 2 categorical variables and two numeric variables. I ending up finding a data set containing hate crime data from the state of New York for 2010-2016.  
+
+The file containes 423 observations and 44 variables; Three categorical variables include `county`, `year`, and `crime_type`, and the remaining 41 variables are numeric tallies of the the various categories of victims--ranging from ethnic and religious groups, to categorizations based on gender and sexual identity among other things.  
+  
+This data file was provided by the New York Division of Criminal Justice  (a State agency), was created Secptember, 2, 2016, and was last updated on June 10, 2019. Only crimes that were reported to the police are included.  
+  
+# Data Summaries  
+  
+In analyzing my data, I started with some basic frequency tables to help summarize how overall hate crime counts varied by `crime_type` for each `county`. To create these, and because the data was already summarized to show crime totals by county, crime type, and year, I had to further aggregate the date to obtain the desired breakdown level for my frequencies. I created columns aggregating the overall counts by crime type and county three areas of interest: # victims, # offenders, and # incidents. I then combined these aggregated figures into a single, interactive contingency table.  
+  
+```{r tableFull, echo=TRUE, eval=TRUE}
+
+# Frequency Tables
+ctyCrimeVic <- aggregate(total_victims ~ county + crime_type, data = HateCrimes, sum)
+
+ctyCrimeOff <- aggregate(total_offenders ~ county + crime_type, data = HateCrimes, sum)
+
+ctyCrimeInc <- aggregate(total_incidents ~ county + crime_type, data = HateCrimes, sum)
+
+# Combined Frequencies
+ctyCrimeTot <- full_join(ctyCrimeVic, ctyCrimeOff, c("county", "crime_type")) %>%
+  full_join(ctyCrimeInc, c("county", "crime_type"))
+
+# Interactive Table
+datatable(ctyCrimeTot, rownames = FALSE, colnames = c("County", "Crime Type", "Total Victims", "Total Offenders", "Total Incidents"))
+```
+  
+  
+# Visuals  
+  
+## Totals by Crime Type  
+  
+I created some simple bar plots to show totals by crime type for all hate crime incidents, victims involved, and offenders involved. I created a function to create my graphs to speed up the process for since they were all going to be similar in style/content.  
+  
+```{r twoVarViz, echo=TRUE, eval=TRUE}
+# I created a function to generate my 2-variable graphs
+colChart <- function(df, a, b, alab, blab, plotTitle) {
+              ggplot(data = df, aes_string(x = a, y = b, fill = a)) +
+                geom_bar(stat = "identity", na.rm=TRUE, aes_string(fill = a)) +
+                  labs(fill = alab,  title = plotTitle) +
+                  xlab(NULL) +
+                  theme(axis.text.x = element_blank())  +
+                  scale_y_continuous(name = blab)
+}
+# I used the function I created to print graphs for total incidents, victims, and offenders by crime type
+print(colChart(df=ctyCrimeTot, "crime_type", "total_incidents", "Crime Type", "Total Incidents", "Incidents by Crime Type"))
+
+print(colChart(df=ctyCrimeTot, "crime_type", "total_victims", "Crime Type", "Total Victims", "Victims by Crime Type"))
+
+print(colChart(df=ctyCrimeTot, "crime_type", "total_offenders", "Crime Type", "Total Offenders", "Offenders by Crime Type"))
+```
+  
+## County Hate Crime Incidents 2010-2016  
+  
+Because my numeric data was broken out by the two crime types for each county, I created a new aggregated table to summarize total incidents by county for the years in the survey and used these figures to create box plots for comparison. I used the `facet_wrap()` function to allow for easy "at-a-glance" comparisons of counties.  
+  
+```{r box,  echo=TRUE, eval=TRUE}
+ctyCrime <- aggregate(total_incidents ~ county + year, data = HateCrimes, sum)
+ctyCrime <- ctyCrime[order(-ctyCrime$total_incidents),]
+
+b1 <- ggplot(ctyCrime, aes(x = county, y = total_incidents)) +
+      geom_boxplot(fill = "blue") +
+      coord_flip()
+print(b1)
+```
+  
+## Total Victims and Crime Types by County  
+  
+For my next graph, I wanted to examine the data by County and compare the volume of crime types for each. Because there were so many counties involved in the data, I thought that the best way to get a visual comparison would again be via the `facet_wrap` function in ggplot.  
+  
+```{r threeVarViz, echo=TRUE, eval=TRUE}
+c3 <- ggplot(data = ctyCrimeTot, aes(x = crime_type, y = total_victims, fill = crime_type)) +
+        geom_bar(stat = "identity", na.rm=TRUE, aes(fill = crime_type)) +
+          labs(fill = "Crime Type")  +
+          xlab(NULL) +
+          theme(axis.text.x = element_blank())  +
+          scale_y_continuous(name = "Total Crimes", breaks = c(0, 250, 500)) +
+          facet_wrap(.~`county`)
+print(c3)
+
+```
+  
+## ScatterPlot of Total Victims * Total Offenders  
+  
+For this comparison, I expected there to be a positive, linear relationship, but I still wanted to look at the scatterplot to see if I observed any trends that were unexpected.
+
+```{r scatterLine, echo=TRUE, eval=TRUE}
+
+s1 <- ggplot(HateCrimes, aes(x = total_victims, y = total_offenders)) +
+     geom_point(aes(group = crime_type, color = crime_type)) +
+     labs(title = "Victims vs. Offenders by Crime Type", x = "Total Victims", y ="Total Offenders", color = NULL)
+     
+print(s1)
+```
+  
+Looking at my results--specifically the faceted bar charts and the side-by-side box-plots--I would definitely be interesed in obtaining more information on the population of each County and and how hate crime rates compared amongst counties when total population is considered (perhaps as a ratio of total population).  From there I would further research factors that might contribute to an area having a higher/lower crime ratio.  
+  
+  
+# *References*  
+1. <https://www.w3.org/standards/xml/core>  
+2. <https://www.makeuseof.com/tag/xml-file-case-wondering/>
+3. <https://whatis.techtarget.com/definition/XML-Extensible-Markup-Language>  
+4. <https://www.w3.org/standards/xml/core>  
+5. <https://cran.r-project.org/web/packages/XML/index.html>  
+6. <https://mran.microsoft.com/snapshot/2018-02-25/web/packages/xml2/index.html>  
+7. <https://cran.r-project.org/web/packages/flatxml/index.html>  
+
